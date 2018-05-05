@@ -59,3 +59,5 @@ tm_shape(ms) +
 
 tm_shape(ms) +
   tm_polygons('blkpct16')
+
+gdit_st
