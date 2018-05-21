@@ -38,7 +38,7 @@ ky_cnty <- c("Clark","Fayette","Jessamine","Scott","Woodford","Bourbon","Madison
 ms_cnty <- c("Forrest","Perry","Lamar","Jones","Clarke","Greene","Jasper","Kemper",
              "Lauderdale","Neshoba","Newton","Wayne","Covington","Jefferson Davis",
              "Leake","Marion","Scott","Smith","George","Pearl River","Stone",
-             "Adams","Amite","Claiborne","Franklin","Lawrence",
+             "Adams","Amite","Claiborne","Franklin","Lawrence","Lamar",
              "Lincoln","Pike","Walthall","Warren","Wilkinson", "Jefferson County")
 
 la_cnty <- c("Washington","Jefferson Parish","Orleans","Plaquemines","St. Bernard","St. Charles",
@@ -408,3 +408,99 @@ x <- c(
   "My favourite colour is green"
 )
 str_replace_all(x, colours, col2hex)
+
+
+ms_cwa <- get_acs(geography = "tract", 
+                    variables = c("B19013_001E",'B25001_001E','B25002_002E',
+                                  'B25002_003E','B25003_001E','B25003_002E',
+                                  'B25003_003E',  'B02001_001E',
+                                  'B02001_002E',
+                                  'B02001_003E',
+                                  'B17001_001E',
+                                  'B17001_002E'),
+                    county = ms_cnty,
+                    state = "MS",
+                    year = 2015,
+                    survey = "acs5",
+                    output = 'wide',
+                  geometry = TRUE) %>%
+  rename(hhincome16 = "B19013_001E",
+         tothu16 = 'B25001_001E',
+         totocc16 = 'B25002_002E',
+         totvac16 = 'B25002_003E',
+         tottenure16 = 'B25003_001E',
+         ownocc16 = 'B25003_002E',
+         rentocc16 = 'B25003_003E',
+         tpop16 = 'B02001_001E',
+         white16 = 'B02001_002E',
+         black16 = 'B02001_003E',
+         tpov16 = 'B17001_001E',
+         ipov16 = 'B17001_002E') %>%
+  mutate(hopct16 = round(100 * (ownocc16/tothu16),1),
+         rntpct16 = round(100 * rentocc16/tothu16),1,
+         occpct16 = round(100 * totocc16/tothu16), 1,
+         vacpct16 = round(100 * totvac16/tothu16), 1,
+         whtpct16 = round(100 * (white16/tpop16), 1),
+         blkpct16 = round(100 * (black16/tpop16), 1),
+         povrt16 = round(100 * (ipov16/tpov16),1))
+
+ms_cnty <- c("Forrest","Perry","Lamar","Jones","Clarke","Greene","Jasper","Kemper",
+             "Lauderdale","Neshoba","Newton","Wayne","Covington","Jefferson Davis",
+             "Leake","Marion","Scott","Smith","George","Pearl River","Stone",
+             "Adams","Amite","Claiborne","Franklin","Lawrence","Lamar",
+             "Lincoln","Pike","Walthall","Wilkinson", "Jefferson County")
+
+#ms_cnty2 <- c("Forrest","Perry","Lamar","Jones","Clarke","Greene","Jasper","Kemper",
+#             "Lauderdale","Neshoba","Newton","Wayne","Covington","Jefferson Davis",
+#             "Leake","Marion","Scott","Smith","George","Pearl River","Stone","Simpson",
+#             "Adams","Amite","Claiborne","Franklin","Lawrence","Lamar","Copiah","Hinds","Warren","Rankin",
+#             "Lincoln","Pike","Walthall","Wilkinson", "Jefferson County")
+
+
+tm_shape(ms_cwa) +
+  tm_polygons('hhincome16')
+
+tm_shape(ms_cwa_cnty) +
+  tm_polygons('hhincome16')
+
+rd <- primary_roads(year = 2016)
+
+ms_cwa_cnty <- ms_cwa_cnty %>%
+  st_transform(32616)
+
+st_transform(crs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 
+               +lon_0=-84 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 
+             +units=m +no_defs")
+
+## plot yea things
+county <-   
+  tm_shape(ms_cwa) + 
+  tm_polygons('blkpct16', style = 'jenks', palette = 'Greens',
+          title = 'Percent Black, 2016') +
+  tm_shape(ms_cwa_cnty) + 
+  tm_borders(col = "black") + 
+    tm_shape(rd) +
+  tm_lines(col = "black") +
+  tm_legend(position = c(0.025, 0.05),
+            bg.color = "white",
+            frame = TRUE,
+            legend.text.size = 0.8,
+            legend.title.size = 1)
+county
+
+## plot yea things
+cnty_cwa <-   
+  tm_shape(ms_cwa_cnty) + 
+  tm_polygons('blkpct16', style = 'jenks', palette = "Greens",
+              title = 'Percent Black, 2016') +
+  tm_shape(ms_cwa_cnty) + 
+  tm_borders(col = "black") + 
+  tm_shape(rd) +
+  tm_lines(col = "black") +
+  tm_legend(position = c(0.025, 0.05),
+            bg.color = "white",
+            frame = TRUE,
+            legend.text.size = 0.8,
+            legend.title.size = 1) +
+  tm_style_grey(bg.color = '#272728')
+cnty_cwa
